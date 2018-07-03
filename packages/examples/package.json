@@ -26,6 +26,7 @@
     ]
   },
   "dependencies": {
+    "@candela/d3chart": "^0.23.3",
     "@candela/events": "^0.23.3",
     "@candela/geojs": "^0.23.3",
     "@candela/glo": "^0.23.3",

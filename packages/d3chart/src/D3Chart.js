@@ -2,6 +2,7 @@ import { VisComponent } from '@candela/core';
 import { InitSize } from '@candela/size';
 
 import { select } from 'd3-selection';
+import 'd3-transition';
 
 export const Margin = Base => class extends Base {
   constructor () {
@@ -34,8 +35,6 @@ export const Margin = Base => class extends Base {
       ...mm
     };
 
-    console.log('this._margin', this._margin);
-
     return this;
   }
 };
@@ -48,18 +47,21 @@ export const D3Chart = Base => class extends Margin(InitSize(Base)) {
       .append('svg')
       .attr('xmlns', 'http://www.w3.org/2000/svg');
 
-    this.vis = this.svg.append('g')
-      .classed('vis', true);
+    // A root-level group element.
+    this.root = this.svg.append('g');
 
-    this.xAxis = this.vis.append('g')
-      .classed('axis', true)
-      .classed('x-axis', true);
+    // Group elements to represent all four margins of the plot.
+    this.left = this.root.append('g')
+      .classed('left', true);
+    this.bottom = this.root.append('g')
+      .classed('bottom', true);
+    this.right = this.root.append('g')
+      .classed('right', true);
+    this.top = this.root.append('g')
+      .classed('top', true);
 
-    this.yAxis = this.vis.append('g')
-      .classed('axis', true)
-      .classed('y-axis', true);
-
-    this.plot = this.vis.append('g')
+    // The central area where the main plot will go.
+    this.plot = this.root.append('g')
       .classed('plot', true);
   }
 
@@ -67,14 +69,13 @@ export const D3Chart = Base => class extends Margin(InitSize(Base)) {
     this.svg.attr('width', this.width)
       .attr('height', this.height);
 
-    console.log('this.width', this.width);
-    console.log('this.height', this.height);
-
     const margin = this.margin();
 
-    this.yAxis.attr('transform', `translate(0,${margin.top})`);
+    this.left.attr('transform', `translate(0,${margin.top})`);
+    this.bottom.attr('transform', `translate(${margin.left},${this.height - margin.bottom})`);
+    this.right.attr('transform', `translate(${this.width - margin.right},${margin.top})`);
+    this.top.attr('transform', `translate(${margin.left},0)`);
     this.plot.attr('transform', `translate(${margin.left},${margin.top})`);
-    this.xAxis.attr('transform', `translate(${margin.left},${this.height - margin.bottom})`);
   }
 };
 
@@ -90,21 +91,37 @@ export class Swatches extends D3Chart(VisComponent) {
     const margin = this.margin();
     console.log(margin);
 
-    this.xAxis.append('rect')
+    this.left.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', margin.left)
+      .attr('height', this.height - margin.bottom - margin.top)
+      .style('stroke', 'black')
+      .style('fill', 'red');
+
+    this.bottom.append('rect')
       .attr('x', 0)
       .attr('y', 0)
       .attr('width', this.width - margin.left - margin.right)
       .attr('height', margin.bottom)
       .style('stroke', 'black')
-      .style('fill', 'red');
+      .style('fill', 'green');
 
-    this.yAxis.append('rect')
+    this.right.append('rect')
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', margin.left)
-      .attr('height', this.height - margin.top - margin.bottom)
+      .attr('width', margin.right)
+      .attr('height', this.height - margin.bottom - margin.top)
       .style('stroke', 'black')
-      .style('fill', 'green');
+      .style('fill', 'cyan');
+
+    this.top.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', this.width - margin.left - margin.right)
+      .attr('height', margin.top)
+      .style('stroke', 'black')
+      .style('fill', 'yellow');
 
     this.plot.append('rect')
       .attr('x', 0)
