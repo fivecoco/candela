@@ -137,6 +137,81 @@ export const D3Chart = Base => class extends Margin(InitSize(Base)) {
   }
 };
 
+export const Interactive = Base => class extends Base {
+  initInteractive () {
+    const plotBounds = this.marginBounds('plot');
+
+    const target = this.root.append('rect')
+      .classed('targetttt', true)
+      .attr('x', plotBounds.x)
+      .attr('y', plotBounds.y)
+      .attr('width', plotBounds.width)
+      .attr('height', plotBounds.height)
+      .style('opacity', 0.0);
+
+    this._interactive = {
+      target
+    };
+  }
+
+  target () {
+    return this._interactive.target;
+  }
+
+  mouseCoords () {
+    const event = window.event;
+    if (event) {
+      const bbox = this.target().node().getBoundingClientRect();
+      return {
+        x: event.clientX - bbox.left,
+        y: event.clientY - bbox.top
+      };
+    }
+  }
+};
+
+export const Crosshairs = Base => class extends Interactive(Base) {
+  initCrosshairs () {
+    this.initInteractive();
+
+    const g = this.plot.append('g')
+      .classed('crosshairs', true);
+
+    const horz = this.bottomAxis() || this.topAxis();
+    const vert = this.leftAxis() || this.rightAxis();
+
+    const crosshairX = g.append('line')
+      .classed('crosshair-x', true)
+      .style('opacity', 0)
+      .style('stroke', 'lightgray')
+      .attr('x1', horz.range()[0])
+      .attr('x2', horz.range()[1]);
+
+    const crosshairY = g.append('line')
+      .classed('crosshair-y', true)
+      .style('opacity', 0)
+      .style('stroke', 'lightgray')
+      .attr('y1', vert.range()[0])
+      .attr('y2', vert.range()[1]);
+
+    this.target().on('mouseenter.crosshairs', () => {
+      g.selectAll('line')
+        .style('opacity', 1);
+    }).on('mousemove.crosshairs', () => {
+      const mouse = this.mouseCoords();
+
+      crosshairX.attr('y1', mouse.y)
+        .attr('y2', mouse.y);
+
+      crosshairY.attr('x1', mouse.x)
+        .attr('x2', mouse.x);
+    }).on('mouseout.crosshairs', () => {
+      g.selectAll('line')
+        .style('opacity', 0);
+    });
+  }
+};
+
 export const AxisChart = Base => class extends Base {
   constructor () {
     super(...arguments);
