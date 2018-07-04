@@ -1,4 +1,5 @@
 import { VisComponent } from '@candela/core';
+import { Events } from '@candela/events';
 import { InitSize } from '@candela/size';
 
 import { select } from 'd3-selection';
@@ -170,7 +171,7 @@ export const Interactive = Base => class extends Base {
   }
 };
 
-export const Crosshairs = Base => class extends Interactive(Base) {
+export const Crosshairs = Base => class extends Events(Interactive(Base)) {
   initCrosshairs () {
     this.initInteractive();
 
@@ -205,10 +206,39 @@ export const Crosshairs = Base => class extends Interactive(Base) {
 
       crosshairY.attr('x1', mouse.x)
         .attr('x2', mouse.x);
+
+      this.emit('crosshairs.move', window.event);
     }).on('mouseout.crosshairs', () => {
       g.selectAll('line')
         .style('opacity', 0);
+
+      this.emit('crosshairs.out');
     });
+  }
+};
+
+export const Tooltip = Base => class extends Base {
+  constructor () {
+    super(...arguments);
+
+    this._tooltip = {};
+    this._tooltip.tooltip = select(this.el)
+      .append('div')
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('text-align', 'center')
+      .style('width', '80px')
+      .style('height', '30px')
+      .style('padding', '2px')
+      .style('font', '12px sans-serif')
+      .style('background', 'lightgreen')
+      .style('border', '0px')
+      .style('border-radius', '8px')
+      .style('pointer-events', 'none');
+  }
+
+  tooltip () {
+    return this._tooltip.tooltip;
   }
 };
 
