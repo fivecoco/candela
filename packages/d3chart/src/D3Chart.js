@@ -178,8 +178,8 @@ export const Crosshairs = Base => class extends Events(Interactive(Base)) {
     const g = this.plot.append('g')
       .classed('crosshairs', true);
 
-    const horz = this.bottomAxis() || this.topAxis();
-    const vert = this.leftAxis() || this.rightAxis();
+    const horz = this.bottomScale() || this.topScale();
+    const vert = this.leftScale() || this.rightScale();
 
     const crosshairX = g.append('line')
       .classed('crosshair-x', true)
@@ -250,13 +250,16 @@ export const AxisChart = Base => class extends Base {
       leftScale: null,
       bottomScale: null,
       leftAxis: null,
-      bottomAxis: null
+      bottomAxis: null,
+      leftGroup: null,
+      bottomGroup: null
     };
   }
 
   _setAxis (scale, direction, scaleFunc) {
     const axisProp = `${direction}Axis`;
     const scaleProp = `${direction}Scale`;
+    const groupProp = `${direction}Group`;
 
     const bounds = this.marginBounds('plot');
 
@@ -268,9 +271,9 @@ export const AxisChart = Base => class extends Base {
 
     this._axes[scaleProp] = scale;
 
-    let axis = this._axes[axisProp];
+    let axis = this._axes[groupProp];
     if (!axis) {
-      this._axes[axisProp] = axis = this[direction].append('g');
+      axis = this._axes[groupProp] = this[direction].append('g');
 
       if (direction === 'left') {
         const margin = this.margin();
@@ -280,10 +283,18 @@ export const AxisChart = Base => class extends Base {
       axis.selectAll('*').remove();
     }
 
-    axis.call(scaleFunc(scale));
+    axis.call(this._axes[axisProp] = scaleFunc(scale));
   }
 
-  leftAxis (scale) {
+  leftAxis () {
+    return this._axes.leftAxis;
+  }
+
+  bottomAxis () {
+    return this._axes.bottomAxis;
+  }
+
+  leftScale (scale) {
     if (scale) {
       this._setAxis(scale, 'left', axisLeft);
       return this;
@@ -292,13 +303,21 @@ export const AxisChart = Base => class extends Base {
     }
   }
 
-  bottomAxis (scale) {
+  bottomScale (scale) {
     if (scale) {
       this._setAxis(scale, 'bottom', axisBottom);
       return this;
     } else {
       return this._axes.bottomScale;
     }
+  }
+
+  renderLeftAxis () {
+    this._axes.leftGroup.call(this.leftAxis());
+  }
+
+  renderBottomAxis () {
+    this._axes.bottomGroup.call(this.bottomAxis());
   }
 };
 
